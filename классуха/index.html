@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Что о тебе думает классный руководитель?</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&family=Montserrat:wght@900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Comfortaa', cursive;
+            background-color: #fff9eb;
+            background-image: radial-gradient(#ffe4a3 0.5px, transparent 0.5px);
+            background-size: 15px 15px;
+        }
+        .header-title {
+            font-family: 'Montserrat', sans-serif;
+            text-shadow: 2px 2px 0px #818cf8;
+        }
+        .grid-item {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            user-select: none;
+        }
+        .grid-item:hover {
+            transform: scale(1.1) rotate(-3deg);
+            z-index: 10;
+        }
+        .grid-item.hidden-card {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0) rotate(-180deg);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            z-index: 50;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .sticker-circle {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 70px;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border: 5px white solid;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .card-pop {
+            animation: popIn 0.5s cubic-bezier(0.26, 1.36, 0.74, 1.49);
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen">
+
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-6">
+            <div class="inline-block bg-pink-500 px-4 py-1 rounded-full mb-3 shadow-lg transform rotate-2">
+                <span class="font-bold text-white uppercase tracking-widest text-xs">Секретные мысли учителя</span>
+            </div>
+            <h1 class="header-title text-3xl md:text-5xl font-black text-white mb-2">
+                КЛАССНЫЙ РУКОВОДИТЕЛЬ 🤫
+            </h1>
+            <!-- Заменил текст на тот, что был в предыдущей версии -->
+            <p class="text-slate-500 text-base font-bold bg-white/50 inline-block px-4 py-1 rounded-lg">Вся правда о тебе в глазах классухи! 😂🔥</p>
+        </header>
+
+        <div id="grid" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-10 gap-3 max-w-6xl mx-auto">
+            <!-- Кнопки генерируются через JS -->
+        </div>
+
+        <div class="mt-10 text-center">
+            <button onclick="resetGame()" class="px-10 py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg transition-all shadow-[0px_6px_0px_#4338ca] hover:shadow-[0px_3px_0px_#4338ca] hover:translate-y-[3px] active:shadow-none active:translate-y-[6px]">
+                ОБНУЛИТЬ КАРМУ 🔄
+            </button>
+        </div>
+    </div>
+
+    <!-- Модальное окно -->
+    <div id="modal" class="modal" onclick="closeModal()">
+        <div class="bg-white border-[8px] border-slate-900 rounded-[40px] max-w-lg w-full p-8 shadow-2xl card-pop relative overflow-hidden" onclick="event.stopPropagation()">
+            <div class="absolute -top-10 -right-10 w-24 h-24 bg-yellow-300 rounded-full opacity-50"></div>
+            
+            <div id="sticker-container" class="sticker-circle"></div>
+            
+            <div class="text-center relative z-10">
+                <h2 id="rus-text" class="text-2xl font-black text-indigo-600 mb-8 leading-tight"></h2>
+                
+                <button onclick="closeModal()" class="w-full py-4 bg-pink-500 text-white rounded-xl font-black text-lg hover:bg-pink-400 transition-all shadow-[0px_5px_0px_#be185d] active:shadow-none active:translate-y-[5px]">
+                    Я БОЛЬШЕ ТАК НЕ БУДУ! 🙏
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const opinions = [
+            // Смешные/острые (25 фраз)
+            { text: "Ты — моя любимая... головная боль!", sticker: "💊", color: "#fef08a" },
+            { text: "Твой дневник как детектив: сплошная драма!", sticker: "🕵️", color: "#e0f2fe" },
+            { text: "Коридоры школы скучают по тебе на уроках.", sticker: "🚪", color: "#ffedd5" },
+            { text: "Ты — гендиректор фразы 'Я забыл сменку'.", sticker: "👟", color: "#dcfce7" },
+            { text: "Номера твоих родителей у меня в избранном.", sticker: "📲", color: "#fee2e2" },
+            { text: "Я узнаю твой смех даже с первого этажа.", sticker: "😆", color: "#f1f5f9" },
+            { text: "Мытье доски — твоя лучшая физкультура.", sticker: "🧽", color: "#ffcfd2" },
+            { text: "Парта похожа на место раскопок динозавров.", sticker: "🦖", color: "#cfebff" },
+            { text: "Твой телефон явно интереснее моих рассказов.", sticker: "🤳", color: "#fdf2f2" },
+            { text: "Ты — мастер маскировки во время дежурства.", sticker: "🥷", color: "#e0e7ff" },
+            { text: "Оскар за роль самого внимательного (нет) слушателя!", sticker: "🏆", color: "#fdf2f8" },
+            { text: "Ты здесь ради знаний или ради пиццы в столовой?", sticker: "🍕", color: "#fff7ed" },
+            { text: "Твой почерк — шифр, который не взломать.", sticker: "🖋️", color: "#f0fdf4" },
+            { text: "В тебе больше энергии, чем во всей школе.", sticker: "🔋", color: "#faf5ff" },
+            { text: "Хватит болтать! Стены уже устали слушать.", sticker: "🙊", color: "#fff1f2" },
+            { text: "Твой рюкзак — черная дыра для ручек.", sticker: "🎒", color: "#fffbeb" },
+            { text: "Если опоздания — спорт, ты олимпийский чемпион.", sticker: "🥇", color: "#ecfdf5" },
+            { text: "Твой ТикТок... я видела. У меня много вопросов.", sticker: "🎬", color: "#fff7ed" },
+            { text: "Это класс или комеди-клаб? Ты определись!", sticker: "🎪", color: "#f8fafc" },
+            { text: "Стул плачет, когда ты на нем раскачиваешься.", sticker: "🤸", color: "#fff7ed" },
+            { text: "Ты можешь прожить 45 минут без еды под партой?", sticker: "🥪", color: "#fff1f2" },
+            { text: "Родители думают — ангел. Я знаю правду!", sticker: "👿", color: "#e0f2fe" },
+            { text: "Моя нервная система уйдет в отпуск после твоего выпуска.", sticker: "🧘", color: "#faf5ff" },
+            { text: "Ты — мой любимый хулиган. Только тссс!", sticker: "🤫", color: "#fefce8" },
+            { text: "Целая неделя без замечаний? Ты заболел?", sticker: "🕯️", color: "#f1f5f9" },
+
+            // Хорошие/добрые (25 фраз)
+            { text: "Ты — душа нашего класса, всегда светишься!", sticker: "✨", color: "#fef08a" },
+            { text: "Я верю в твой успех больше, чем ты сам!", sticker: "🚀", color: "#e0f2fe" },
+            { text: "Твоя доброта делает наш класс лучше.", sticker: "💖", color: "#ffedd5" },
+            { text: "Ты очень талантливый человек, не зарывай это!", sticker: "💎", color: "#f3e8ff" },
+            { text: "Мне очень приятно видеть твое старание.", sticker: "📈", color: "#dcfce7" },
+            { text: "У тебя потрясающее чувство юмора (в добром смысле).", sticker: "😸", color: "#fee2e2" },
+            { text: "Ты — будущий лидер, я это точно вижу!", sticker: "👑", color: "#f1f5f9" },
+            { text: "Спасибо, что всегда помогаешь одноклассникам.", sticker: "🤝", color: "#ffcfd2" },
+            { text: "Твои идеи на уроках меня часто удивляют!", sticker: "💡", color: "#cfebff" },
+            { text: "Ты очень надежный человек, я на тебя полагаюсь.", sticker: "⚓", color: "#fdf2f2" },
+            { text: "Я горжусь твоими успехами в этом году!", sticker: "🎖️", color: "#e0e7ff" },
+            { text: "У тебя золотое сердце, береги его.", sticker: "💛", color: "#ecfdf5" },
+            { text: "Ты очень быстро схватываешь всё новое!", sticker: "🏃", color: "#fdf2f8" },
+            { text: "Твое присутствие на уроке всегда радует.", sticker: "☀️", color: "#fff7ed" },
+            { text: "Ты умеешь найти выход из любой ситуации.", sticker: "🧩", color: "#f0fdf4" },
+            { text: "Твоя любознательность — твоя суперсила.", sticker: "🧐", color: "#faf5ff" },
+            { text: "Ты умеешь слушать и слышать, это редкость.", sticker: "👂", color: "#f1f5f9" },
+            { text: "Я знаю, что ты добьешься всего, чего захочешь!", sticker: "🌠", color: "#fff1f2" },
+            { text: "Твои работы — образец аккуратности и ума.", sticker: "📝", color: "#fffbeb" },
+            { text: "Ты — настоящий пример для многих в классе.", sticker: "🌟", color: "#fdf2f8" },
+            { text: "Всегда оставайся таким же искренним человеком.", sticker: "🤍", color: "#ecfdf5" },
+            { text: "Твоя улыбка спасает даже самый сложный день.", sticker: "🌈", color: "#fff7ed" },
+            { text: "Ты очень творческая личность, созидай!", sticker: "🎨", color: "#f0f9ff" },
+            { text: "Я рада, что ты учишься именно в моем классе!", sticker: "🍀", color: "#fef2f2" },
+            { text: "Впереди у тебя только великие открытия!", sticker: "🌍", color: "#fefce8" }
+        ];
+
+        const colors = ['#f87171', '#fb923c', '#fbbf24', '#4ade80', '#22d3ee', '#818cf8', '#f472b6'];
+        const grid = document.getElementById('grid');
+        const modal = document.getElementById('modal');
+        const rusText = document.getElementById('rus-text');
+        const stickerContainer = document.getElementById('sticker-container');
+
+        function initGrid() {
+            grid.innerHTML = '';
+            // Перемешиваем массив, чтобы хорошие и смешные шли вперемешку
+            const shuffled = [...opinions].sort(() => Math.random() - 0.5);
+            
+            for (let i = 1; i <= 50; i++) {
+                const button = document.createElement('button');
+                button.innerText = i;
+                const randomColor = colors[i % colors.length];
+                button.className = "grid-item h-16 sm:h-20 bg-white border-[4px] rounded-[20px] text-xl sm:text-2xl font-black shadow-[0px_4px_0px_#e2e8f0] flex items-center justify-center transform active:scale-95";
+                button.style.borderColor = randomColor;
+                button.style.color = randomColor;
+                button.id = `card-${i}`;
+                button.onclick = () => showOpinion(i, shuffled[i-1]);
+                grid.appendChild(button);
+            }
+        }
+
+        function showOpinion(index, data) {
+            rusText.innerText = data.text;
+            stickerContainer.innerText = data.sticker;
+            stickerContainer.style.backgroundColor = data.color;
+            
+            modal.classList.add('active');
+            
+            const card = document.getElementById(`card-${index}`);
+            card.classList.add('hidden-card');
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+        }
+
+        function resetGame() {
+            initGrid();
+        }
+
+        initGrid();
+    </script>
+</body>
+</html>
